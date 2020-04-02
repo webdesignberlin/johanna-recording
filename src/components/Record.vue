@@ -1,0 +1,210 @@
+<template>
+  <div class="record">
+    <button
+      @click="record"
+      class="record-btn"
+      :class="{ active: recording }">
+      <span class="record-btn__icon-part-1">
+        <span class="record-btn__icon-part-2"></span>
+      </span>
+    </button>
+    <audio
+      class="play"
+      :class="{ active: playing }"
+      :src="recordedAudio.src"
+      :controls="recordedAudio.controls"
+      :autoplay="true"
+      @click="play"
+      ref="player"
+    ></audio>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'Record',
+  props: {
+    msg: String,
+  },
+  data() {
+    return {
+      rec: null,
+      audioChunks: [],
+      recordedAudio: {},
+      recording: false,
+      playing: false,
+    };
+  },
+  mounted() {
+    this.init();
+    this.$refs.player.addEventListener('play', () => { this.playing = true; });
+    this.$refs.player.addEventListener('stop', () => { this.playing = false; });
+    this.$refs.player.addEventListener('pause', () => { this.playing = false; });
+  },
+  methods: {
+    init() {
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then((stream) => { this.handlerFunction(stream); });
+    },
+    handlerFunction(stream) {
+      this.rec = new MediaRecorder(stream);
+      this.rec.ondataavailable = (e) => {
+        this.audioChunks.push(e.data);
+        if (this.rec.state === 'inactive') {
+          const blob = new Blob(this.audioChunks, { type: 'audio/mpeg-3' });
+          this.recordedAudio = {
+            src: URL.createObjectURL(blob),
+            controls: true,
+            autoplay: true,
+          };
+          this.sendData(blob);
+        }
+      };
+    },
+    sendData() {},
+    record(e) {
+      this.recording = !this.recording;
+
+      if (this.recording) {
+        this.rec.start(e);
+      } else {
+        this.rec.stop();
+      }
+    },
+    play() {
+      this.$refs.player.play();
+    },
+  },
+};
+</script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped lang="scss">
+.record {
+  --btn-size: 50vmin;
+
+  display: grid;
+  grid-gap: 1rem;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr 1fr;
+  height: 100vh;
+  justify-items: center;
+  align-items: center;
+
+  @media (min-width: 600px) {
+    --btn-size: 40vmin;
+
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr;
+  }
+}
+
+.play {
+  position: relative;
+  background-color: #4DB6AC;
+  border-radius: 50%;
+  width: var(--btn-size);
+  height: var(--btn-size);
+  display: inline-block;
+  cursor: pointer;
+  box-shadow: 0 0 0 0 rgba(232, 76, 61, 0.7);
+
+  &::-webkit-media-controls-panel,
+  &::-webkit-media-controls-enclosure {
+    display: none;
+  }
+
+  &.active {
+    background-color: aquamarine;
+    animation: pulse 2s infinite;
+  }
+}
+
+.record-btn {
+  position: relative;
+  background-color: lightcoral;
+  border-radius: 50%;
+  width: var(--btn-size);
+  height: var(--btn-size);
+  display: inline-block;
+  cursor: pointer;
+  box-shadow: 0 0 0 0 rgba(232, 76, 61, 0.7);
+  &:hover {
+    background-color: coral;
+  }
+  &.active {
+    background-color: coral;
+    animation: pulse 2s infinite;
+  }
+  &__icon-part-1 {
+    &:before,
+    &:after {
+      content: '';
+      position: absolute;
+      background-color: #fff;
+    }
+    &:after {
+      top: 30%;
+      left: 43%;
+      height: 15%;
+      width: 14%;
+      border-top-left-radius: 50%;
+      border-top-right-radius: 50%;
+    }
+    &:before {
+      top: 40%;
+      left: 43%;
+      height: 15%;
+      width: 14%;
+      border-bottom-left-radius: 50%;
+      border-bottom-right-radius: 50%;
+    }
+  }
+  &__icon-part-2 {
+    position: absolute;
+    top: 50%;
+    left: 36%;
+    height: 24%;
+    width: 28%;
+    overflow: hidden;
+    &:before,
+    &:after {
+      content: '';
+      position: absolute;
+      background-color: #fff;
+    }
+    &:before {
+      bottom: 50%;
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      border-radius: 50%;
+      border: 0.125em solid #fff;
+      background: none;
+      left: 0;
+    }
+    &:after {
+      top: 50%;
+      left: 40%;
+      width: 20%;
+      height: 25%;
+    }
+  }
+}
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7);
+  }
+
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+  }
+
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  }
+}
+</style>
