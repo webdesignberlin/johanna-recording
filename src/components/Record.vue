@@ -21,6 +21,8 @@
 </template>
 
 <script>
+import AudioRecorder from 'audio-recorder-polyfill';
+
 export default {
   name: 'Record',
   props: {
@@ -43,6 +45,10 @@ export default {
   },
   methods: {
     init() {
+      // polyfill
+      if (!window.MediaRecorder) {
+        window.MediaRecorder = AudioRecorder;
+      }
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then((stream) => { this.handlerFunction(stream); });
     },
@@ -51,7 +57,8 @@ export default {
       this.rec.ondataavailable = (e) => {
         this.audioChunks.push(e.data);
         if (this.rec.state === 'inactive') {
-          const blob = new Blob(this.audioChunks, { type: 'audio/mpeg-3' });
+          const blob = new Blob(this.audioChunks,{ // type: 'audio/mpeg-3'
+          });
           this.recordedAudio = {
             src: URL.createObjectURL(blob),
             controls: true,
