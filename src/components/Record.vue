@@ -61,7 +61,6 @@ export default {
 
           // Set record to <audio> when recording will be finished
           this.rec.addEventListener('dataavailable', (ev) => {
-            console.log('src', ev);
             this.recordedAudio.src = URL.createObjectURL(ev.data);
           });
 
