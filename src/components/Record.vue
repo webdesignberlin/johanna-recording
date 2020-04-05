@@ -8,15 +8,22 @@
         <span class="record-btn__icon-part-2"></span>
       </span>
     </button>
-    <audio
+    <div
       class="play"
+      v-if="recordedAudio.src"
       :class="{ active: playing }"
-      :src="recordedAudio.src"
-      :controls="true"
-      :autoplay="true"
       @click="play"
-      ref="player"
-    ></audio>
+    ></div>
+    <div>
+      <audio
+        class="audio"
+        :src="recordedAudio.src"
+        :controls="true"
+        :autoplay="recordedAudio.autoplay"
+        @click="play"
+        ref="player"
+      ></audio>
+    </div>
   </div>
 </template>
 
@@ -34,6 +41,7 @@ export default {
       audioChunks: [],
       recordedAudio: {
         src: null,
+        autoplay: false,
       },
       recording: false,
       playing: false,
@@ -63,6 +71,7 @@ export default {
           this.rec.addEventListener('dataavailable', (ev) => {
             console.log('src', ev);
             this.recordedAudio.src = URL.createObjectURL(ev.data);
+            this.recordedAudio.autoplay = true;
           });
 
           // Start recording
@@ -116,6 +125,7 @@ export default {
     width: 1px;
     height: 1px;
     opacity: 0;
+    z-index: -1;
   }
 
   &.active {
@@ -210,5 +220,9 @@ export default {
     transform: scale(0.95);
     box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
   }
+}
+
+.audio {
+  opacity: 0;
 }
 </style>
